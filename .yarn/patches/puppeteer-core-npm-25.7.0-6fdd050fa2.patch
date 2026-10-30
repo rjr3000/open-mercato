@@ -1,0 +1,44 @@
+diff --git a/lib/puppeteer/bidi/BrowserConnector.js b/lib/puppeteer/bidi/BrowserConnector.js
+index bae96e94d0ea15ad1d1790a48890b45e2269ede3..36cd6a255bd2e4ad38c1b7eaeec41fe3813359d7 100644
+--- a/lib/puppeteer/bidi/BrowserConnector.js
++++ b/lib/puppeteer/bidi/BrowserConnector.js
+@@ -19,7 +19,7 @@ import { createIncrementalIdGenerator } from '../util/incremental-id-generator.j
+ export async function _connectToBiDiBrowser(connectionTransport, url, options, logger) {
+     const { acceptInsecureCerts = false, networkEnabled = true, issuesEnabled = true, defaultViewport = DEFAULT_VIEWPORT, } = options;
+     const { bidiConnection, cdpConnection, closeCallback } = await getBiDiConnection(connectionTransport, url, options, logger);
+-    const BiDi = await import(/* webpackIgnore: true */ './bidi.js');
++    const BiDi = await import( './bidi.js');
+     const bidiBrowser = await BiDi.BidiBrowser.create({
+         connection: bidiConnection,
+         cdpConnection,
+@@ -42,7 +42,7 @@ export async function _connectToBiDiBrowser(connectionTransport, url, options, l
+  * to BiDi over CDP.
+  */
+ async function getBiDiConnection(connectionTransport, url, options, logger) {
+-    const BiDi = await import(/* webpackIgnore: true */ './bidi.js');
++    const BiDi = await import( './bidi.js');
+     const { slowMo = 0, protocolTimeout, idGenerator = createIncrementalIdGenerator(), } = options;
+     // Try pure BiDi first.
+     const pureBidiConnection = new BiDi.BidiConnection(url, connectionTransport, idGenerator, slowMo, protocolTimeout, options.logger ?? logger);
+diff --git a/lib/puppeteer/node/BrowserLauncher.js b/lib/puppeteer/node/BrowserLauncher.js
+index 6b5a3c53f8ac4448e090b3b3a0799cef7abe5f1a..d01ba1b20ecd3af3584315702d29b200713e648e 100644
+--- a/lib/puppeteer/node/BrowserLauncher.js
++++ b/lib/puppeteer/node/BrowserLauncher.js
+@@ -257,7 +257,7 @@ export class BrowserLauncher {
+      */
+     async createBiDiOverCdpBrowser(browserProcess, cdpConnection, closeCallback, opts) {
+         const bidiOnly = process.env['PUPPETEER_WEBDRIVER_BIDI_ONLY'] === 'true';
+-        const BiDi = await import(/* webpackIgnore: true */ '../bidi/bidi.js');
++        const BiDi = await import( '../bidi/bidi.js');
+         const bidiConnection = await BiDi.connectBidiOverCdp(cdpConnection, opts.logger);
+         return await BiDi.BidiBrowser.create({
+             connection: bidiConnection,
+@@ -279,7 +279,7 @@ export class BrowserLauncher {
+     async createBiDiBrowser(browserProcess, closeCallback, opts) {
+         const browserWSEndpoint = (await browserProcess.waitForLineOutput(WEBDRIVER_BIDI_WEBSOCKET_ENDPOINT_REGEX, opts.timeout)) + '/session';
+         const transport = await WebSocketTransport.create(browserWSEndpoint, undefined, opts.logger);
+-        const BiDi = await import(/* webpackIgnore: true */ '../bidi/bidi.js');
++        const BiDi = await import( '../bidi/bidi.js');
+         const bidiConnection = new BiDi.BidiConnection(browserWSEndpoint, transport, opts.idGenerator, opts.slowMo, opts.protocolTimeout, opts.logger);
+         return await BiDi.BidiBrowser.create({
+             connection: bidiConnection,

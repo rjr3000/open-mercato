@@ -21,7 +21,7 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const nextConfig: NextConfig & { agentRules?: boolean } = {
-  distDir: '.mercato/next',
+  distDir: process.env.OM_OPENNEXT ? '.next' : '.mercato/next',
   // Next 16.3+ has `next dev` auto-generate AGENTS.md/CLAUDE.md pointing agents
   // at node_modules/next/dist/docs. This repo owns its own agent-instruction
   // chain with a ratcheted byte budget (yarn agents:check-budget), so the
@@ -63,7 +63,9 @@ const nextConfig: NextConfig & { agentRules?: boolean } = {
     // underlying drivers at runtime. The full list is owned by
     // @open-mercato/telemetry so it can never drift into a partial (silently
     // "emits nothing") copy.
-    ...telemetryServerExternalPackages,
+    // Workers/OpenNext bundles these inline: OpenNext copies externals
+    // without their transitive deps, which breaks its esbuild pass.
+    ...(process.env.OM_OPENNEXT ? [] : telemetryServerExternalPackages),
   ],
   // Mirror server-only env vars that client components must observe. Keep this
   // list minimal — anything added here is inlined into the client bundle.

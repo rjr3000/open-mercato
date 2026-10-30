@@ -1,6 +1,25 @@
 import { isTelemetryBackendEnabled } from '@open-mercato/shared/lib/telemetry/runtime'
 
 export async function register(): Promise<void> {
+  // Cloudflare Workers: MikroORM reads process.env.DATABASE_URL, but on Workers
+  // the Postgres connection must come from the Hyperdrive binding, whose
+  // connectionString only exists inside the Worker env. Resolve it here — the
+  // earliest server hook — and publish it before any module can call getOrm().
+  if (
+    process.env.NEXT_RUNTIME === 'nodejs'
+    && process.env.NEXT_PHASE !== 'phase-production-build'
+    && !process.env.DATABASE_URL
+  ) {
+    try {
+      const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+      const { env } = await getCloudflareContext({ async: true }) as { env: { HYPERDRIVE?: { connectionString?: string } } }
+      if (env?.HYPERDRIVE?.connectionString) {
+        process.env.DATABASE_URL = env.HYPERDRIVE.connectionString
+      }
+    } catch {
+      // Not running on Cloudflare (plain Node host) — DATABASE_URL comes from env.
+    }
+  }
   // Refuse to serve traffic in production with a missing, placeholder, or too-short JWT signing
   // secret: those tokens are forgeable by anyone who has read the published compose files. Skipped
   // during `next build`, which has no need to sign anything and runs where secrets may be absent.
